@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Eventos — Timbre Escolar{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0"><i class="bi bi-calendar3 me-2 text-primary"></i>Eventos de timbre</h4>
+  <a href="{{ url_for('new_event') }}" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i>Nuevo evento
+  </a>
+</div>
+
+{% if events %}
+<div class="row g-3">
+  {% for ev in events %}
+  <div class="col-12">
+    <div class="card border-0 shadow-sm {% if not ev.active %}opacity-60{% endif %}">
+      <div class="card-body p-4">
+        <div class="row align-items-center g-3">
+
+          <!-- Hora + Nombre -->
+          <div class="col-md-3">
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge bg-primary fs-5 font-monospace px-3 py-2">{{ ev.time }}</span>
+              <div>
+                <div class="fw-bold fs-5">{{ ev.name }}</div>
+                {% if ev.audio_path %}
+                  <small class="text-muted"><i class="bi bi-music-note me-1"></i>{{ ev.audio_path.split('\\')[-1].split('/')[-1] }}</small>
+                {% else %}
+                  <small class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>Sin audio</small>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Días -->
+          <div class="col-md-4">
+            {% for d in days_order %}
+              {% set active_days = ev.days.split(',') %}
+              <span class="badge {% if d in active_days %}bg-primary{% else %}bg-light text-muted border{% endif %} me-1 mb-1">
+                {{ days_labels[d] }}
+              </span>
+            {% endfor %}
+          </div>
+
+          <!-- Volumen + Duración -->
+          <div class="col-md-2">
+            <small class="text-muted d-block mb-1">Volumen</small>
+            <div class="progress" style="height:8px;">
+              <div class="progress-bar bg-primary" style="width:{{ (ev.volume * 100)|int }}%"></div>
+            </div>
+            <small class="text-muted">{{ (ev.volume * 100)|int }}%</small>
+            <div class="mt-2">
+              {% if ev.duration and ev.duration > 0 %}
+                <span class="badge bg-secondary">
+                  <i class="bi bi-hourglass-split me-1"></i>{{ ev.duration }}s
+                </span>
+              {% else %}
+                <span class="badge bg-light text-muted border">
+                  <i class="bi bi-infinity me-1"></i>Completo
+                </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Estado + acciones -->
+          <div class="col-md-3 d-flex gap-2 flex-wrap justify-content-md-end">
+
+            <!-- Test sonido -->
+            {% if ev.audio_path %}
+            <button class="btn btn-outline-success btn-sm btn-test-sound" data-id="{{ ev.id }}"
+                    title="Probar sonido">
+              <i class="bi bi-play-fill me-1"></i>Probar
+            </button>
+            {% endif %}
+
+            <!-- Toggle activar/desactivar -->
+            <form method="post" action="{{ url_for('toggle_event', event_id=ev.id) }}">
+              {% if ev.active %}
+                <button type="submit" class="btn btn-sm btn-outline-secondary"
+                        title="Desactivar este evento (no sonará hasta que lo actives de nuevo)">
+                  <i class="bi bi-toggle-on me-1"></i>Desactivar
+                </button>
+              {% else %}
+                <button type="submit" class="btn btn-sm btn-success"
+                        title="Activar este evento">
+                  <i class="bi bi-toggle-off me-1"></i>Activar
+                </button>
+              {% endif %}
+            </form>
+
+            <!-- Editar -->
+            <a href="{{ url_for('edit_event', event_id=ev.id) }}" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-pencil-fill me-1"></i>Editar
+            </a>
+
+            <!-- Eliminar -->
+            <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#deleteModal{{ ev.id }}" title="Eliminar">
+              <i class="bi bi-trash-fill"></i>Eliminar
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal confirmación borrado -->
+    <div class="modal fade" id="deleteModal{{ ev.id }}" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar eliminación</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            ¿Estás seguro de que deseas eliminar el evento <strong>"{{ ev.name }}"</strong>?
+            Esta acción no se puede deshacer.
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <form method="post" action="{{ url_for('delete_event', event_id=ev.id) }}" class="d-inline">
+              <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash-fill me-1"></i>Eliminar
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="text-center py-5">
+  <i class="bi bi-calendar-x display-1 text-muted"></i>
+  <h4 class="mt-3 text-muted">No hay eventos configurados</h4>
+  <p class="text-muted">Crea el primer evento de timbre para comenzar.</p>
+  <a href="{{ url_for('new_event') }}" class="btn btn-primary btn-lg mt-2">
+    <i class="bi bi-plus-circle me-2"></i>Crear primer evento
+  </a>
+</div>
+{% endif %}
+
+<!-- Toast feedback test sonido -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="soundToast" class="toast align-items-center border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-semibold" id="soundToastMsg"></div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll(".btn-test-sound").forEach(btn => {
+  btn.addEventListener("click", function() {
+    const id = this.dataset.id;
+    fetch(`/events/${id}/test`, {method: "POST"})
+      .then(r => r.json())
+      .then(data => {
+        const toast = document.getElementById("soundToast");
+        document.getElementById("soundToastMsg").textContent = data.msg;
+        toast.classList.remove("bg-success", "bg-danger", "text-white");
+        toast.classList.add(data.ok ? "bg-success" : "bg-danger", "text-white");
+        new bootstrap.Toast(toast, {delay: 3000}).show();
+      });
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.opacity-60 {
+  opacity: 0.6;
+}
+
+.font-monospace {
+  font-family: 'Courier New', monospace !important;
+}
+
+/* Reloj grande */
+#live-clock {
+  font-size: clamp(3rem, 10vw, 6rem);
+  letter-spacing: 0.05em;
+}
+
+/* Cards hover */
+.card {
+  transition: box-shadow 0.15s ease;
+}
+.card:hover {
+  box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1) !important;
+}
+
+/* Badges de días */
+.badge {
+  font-size: 0.8rem;
+}
+
+/* Botones grandes en formulario */
+.btn-check + label {
+  min-width: 60px;
+  text-align: center;
+}
+
+/* Navbar activa */
+.navbar .nav-link.active {
+  font-weight: 600;
+  background: rgba(255,255,255,0.15);
+  border-radius: 6px;
+}
+
+/* Progress bar volumen */
+.progress {
+  border-radius: 4px;
+}
+
+/* Form range */
+input[type=range] {
+  accent-color: #0d6efd;
+}

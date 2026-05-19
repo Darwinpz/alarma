@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if is_editing else 'Nuevo' }} Evento — Timbre Escolar{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-7">
+
+  <div class="d-flex align-items-center mb-4 gap-3">
+    <a href="{{ url_for('events') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h4 class="fw-bold mb-0">
+      <i class="bi bi-{% if is_editing %}pencil{% else %}plus-circle{% endif %}-fill me-2 text-primary"></i>
+      {{ 'Editar evento' if is_editing else 'Nuevo evento de timbre' }}
+    </h4>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4 p-md-5">
+      <form method="post" enctype="multipart/form-data" novalidate>
+
+        <!-- Nombre -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold fs-5" for="name">
+            <i class="bi bi-tag-fill me-2 text-primary"></i>Nombre del evento
+          </label>
+          <input type="text" class="form-control form-control-lg" id="name" name="name"
+                 placeholder="Ej: Entrada, Recreo 1, Salida…"
+                 value="{{ event.name if event else '' }}" required>
+          <div class="form-text">Un nombre único para identificar este timbre.</div>
+        </div>
+
+        <!-- Hora -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold fs-5" for="time">
+            <i class="bi bi-clock-fill me-2 text-primary"></i>Hora de activación
+          </label>
+          <input type="time" class="form-control form-control-lg" id="time" name="time"
+                 value="{{ event.time if event else '' }}" required>
+          <div class="form-text">No puede coincidir con otro evento en los mismos días.</div>
+        </div>
+
+        <!-- Días de la semana -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold fs-5">
+            <i class="bi bi-calendar-week-fill me-2 text-primary"></i>Días de la semana
+          </label>
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            {% for d in days_order %}
+              {% set checked = event and d in event.get('days_list', []) %}
+              <input type="checkbox" class="btn-check" name="days" value="{{ d }}"
+                     id="day_{{ d }}" {% if checked %}checked{% endif %}>
+              <label class="btn btn-outline-primary btn-lg px-3" for="day_{{ d }}">
+                {{ days_labels[d] }}
+              </label>
+            {% endfor %}
+          </div>
+          <div class="form-text mt-2">Selecciona los días en que sonará este timbre.</div>
+        </div>
+
+        <!-- Audio -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold fs-5" for="audio">
+            <i class="bi bi-music-note-beamed me-2 text-primary"></i>Archivo de audio
+          </label>
+          {% if is_editing and event and event.audio_path %}
+            <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-2">
+              <i class="bi bi-file-earmark-music fs-4"></i>
+              <div>
+                <strong>Archivo actual:</strong>
+                {{ event.audio_path.split('\\')[-1].split('/')[-1] }}
+                <br><small>Sube un nuevo archivo para reemplazarlo.</small>
+              </div>
+            </div>
+          {% endif %}
+          <input type="file" class="form-control form-control-lg" id="audio" name="audio"
+                 accept=".mp3,.wav">
+          <div class="form-text">Formatos permitidos: MP3 y WAV. Máximo 32 MB.</div>
+        </div>
+
+        <!-- Duración -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold fs-5" for="duration">
+            <i class="bi bi-hourglass-split me-2 text-primary"></i>Duración del timbre
+          </label>
+          <div class="input-group input-group-lg" style="max-width:260px;">
+            <input type="number" class="form-control" id="duration" name="duration"
+                   min="0" max="300" step="1"
+                   value="{{ event.duration if event else 30 }}">
+            <span class="input-group-text">segundos</span>
+          </div>
+          <div class="form-text">
+            Tiempo máximo de reproducción. Pon <strong>0</strong> para reproducir el archivo completo sin corte.
+          </div>
+        </div>
+
+        <!-- Volumen -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold fs-5" for="volume">
+            <i class="bi bi-volume-up-fill me-2 text-primary"></i>Volumen
+            <span class="badge bg-primary ms-2" id="vol-badge">
+              {{ ((event.volume if event else 1.0) * 100)|int }}%
+            </span>
+          </label>
+          <input type="range" class="form-range" id="volume" name="volume"
+                 min="0" max="1" step="0.05"
+                 value="{{ event.volume if event else '1.0' }}">
+        </div>
+
+        <!-- Activar/Desactivar -->
+        <div class="mb-4">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="active" name="active"
+                   style="width:3em;height:1.5em;"
+                   {% if not event or event.active %}checked{% endif %}>
+            <label class="form-check-label fw-semibold fs-5 ms-2" for="active">
+              Evento activo
+            </label>
+          </div>
+          <div class="form-text">Puedes desactivarlo sin borrarlo para pausarlo temporalmente.</div>
+        </div>
+
+        <!-- Botones -->
+        <div class="d-flex gap-3 pt-2">
+          <button type="submit" class="btn btn-primary btn-lg flex-fill py-3">
+            <i class="bi bi-check-lg me-2 fs-4"></i>
+            {{ 'Guardar cambios' if is_editing else 'Crear evento' }}
+          </button>
+          <a href="{{ url_for('events') }}" class="btn btn-outline-secondary btn-lg px-4">
+            Cancelar
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const volInput = document.getElementById("volume");
+const volBadge = document.getElementById("vol-badge");
+volInput.addEventListener("input", () => {
+  volBadge.textContent = Math.round(volInput.value * 100) + "%";
+});
+</script>
+{% endblock %}

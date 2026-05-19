@@ -1,0 +1,4 @@
+flask>=3.0.0
+apscheduler>=3.10.4
+pygame-ce>=2.5.2
+werkzeug>=3.0.0
