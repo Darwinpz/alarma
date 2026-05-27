@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 app.config["UPLOAD_FOLDER"] = config.UPLOAD_FOLDER
-app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024  # 32 MB
+app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200 MB
 
 DAYS_ORDER = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"]
 DAYS_LABELS = {
@@ -177,6 +177,11 @@ def test_sound(event_id):
     dur = event.get("duration", 0)
     msg = f"Reproduciendo audio — se detendrá en {dur}s" if dur else "Reproduciendo audio..."
     return jsonify({"ok": True, "msg": msg})
+
+@app.errorhandler(413)
+def file_too_large(e):
+    flash("El archivo de audio es demasiado grande. El límite es 200 MB.", "danger")
+    return redirect(request.referrer or url_for("events"))
 
 @app.route("/stop-alarm", methods=["POST"])
 def stop_alarm():
